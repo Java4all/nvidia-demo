@@ -4,6 +4,8 @@
 
 **Hardware reality (RTX 3070 laptop ~8 GB VRAM, 16 GB RAM):** NeMo “full” training often needs **more VRAM** — treat local as **orientation + tiny runs**; use **cloud** for serious fine-tunes.
 
+**EC2 + Amazon Linux 2023 (NIM on instance):** use the short checklist **[docs/SESSION0_EC2_AL2023.md](docs/SESSION0_EC2_AL2023.md)** (`requirements-ec2-inference.txt`, `SESSION0_EC2=1 python scripts/check_env.py`).
+
 ---
 
 ## A. Session 0 — environment (do in order)

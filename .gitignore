@@ -14,4 +14,5 @@ build/
 .pytest_cache/
 .mypy_cache/
 vector_store/
+out/
 *.local.md
