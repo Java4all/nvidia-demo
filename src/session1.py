@@ -53,6 +53,9 @@ _load_dotenv()
 
 def _strip_tool_choice_from_env() -> bool:
     """vLLM/NIM reject OpenAI-style tool_choice='auto' unless the server enables it."""
+    force = os.environ.get("SESSION1_FORCE_STRIP_TOOL_CHOICE", "").strip().lower()
+    if force in ("1", "true", "yes", "on"):
+        return True
     v = os.environ.get("OPENAI_STRIP_TOOL_CHOICE", "1").strip().lower()
     if v in ("0", "false", "no", "off"):
         return False
@@ -70,6 +73,9 @@ class _ChatOpenAIStripToolChoice(ChatOpenAI):
         stop: list[str] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
+        if _strip_tool_choice_from_env():
+            kwargs = dict(kwargs)
+            kwargs.pop("tool_choice", None)
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
         if _strip_tool_choice_from_env():
             payload.pop("tool_choice", None)
@@ -86,13 +92,16 @@ def _llm() -> ChatOpenAI:
             "Set OPENAI_MODEL to the model id your server exposes "
             "(from GET {OPENAI_BASE_URL}/models when base ends with /v1)."
         )
-    return _ChatOpenAIStripToolChoice(
+    llm = _ChatOpenAIStripToolChoice(
         model=model,
         api_key=key,
         base_url=base,
         temperature=0,
         timeout=300,
     )
+    if _strip_tool_choice_from_env() and llm.model_kwargs:
+        llm.model_kwargs.pop("tool_choice", None)
+    return llm
 
 
 def _strip_json_fence(text: str) -> str:

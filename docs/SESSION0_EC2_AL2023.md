@@ -111,7 +111,7 @@ Or: `bash scripts/setup_ec2_venv.sh` (set `PYTHON=python3.12` if your default `p
 
 If the agent fails with **`"auto" tool choice requires --enable-auto-tool-choice and --tool-call-parser`**, either:
 
-- **Client (default here):** Session 1 uses a small `ChatOpenAI` wrapper that **drops `tool_choice`** from requests so NIM/vLLM accept them. Override with `OPENAI_STRIP_TOOL_CHOICE=0` if you need the parameter sent (e.g. OpenAI cloud), or
+- **Client (default here):** Session 1 uses a small `ChatOpenAI` subclass that **drops `tool_choice`** from requests (including bound kwargs and `model_kwargs`). Ensure your EC2 tree has the latest `src/session1.py`, then retry. If something sets `OPENAI_STRIP_TOOL_CHOICE=0` in the shell or systemd, use **`SESSION1_FORCE_STRIP_TOOL_CHOICE=1`** once to confirm. For OpenAI cloud you can set **`OPENAI_STRIP_TOOL_CHOICE=0`** so `tool_choice` is sent.
 - **Server:** start vLLM/NIM with `--enable-auto-tool-choice` and a matching `--tool-call-parser` for your model family (see your NIM / vLLM image docs).
 
 **Security group:** only open **8000** to your IP if you must hit NIM from outside; for **localhost-only**, default SG is fine.
