@@ -6,7 +6,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, HumanMessage
@@ -51,6 +51,31 @@ def _ai_content_str(msg: AIMessage) -> str:
 _load_dotenv()
 
 
+def _strip_tool_choice_from_env() -> bool:
+    """vLLM/NIM reject OpenAI-style tool_choice='auto' unless the server enables it."""
+    v = os.environ.get("OPENAI_STRIP_TOOL_CHOICE", "1").strip().lower()
+    if v in ("0", "false", "no", "off"):
+        return False
+    return True
+
+
+class _ChatOpenAIStripToolChoice(ChatOpenAI):
+    """Drop ``tool_choice`` from chat-completions payloads (NIM / vLLM compatibility)."""
+
+    @override
+    def _get_request_payload(  # type: ignore[override]
+        self,
+        input_: Any,
+        *,
+        stop: list[str] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        if _strip_tool_choice_from_env():
+            payload.pop("tool_choice", None)
+        return payload
+
+
 def _llm() -> ChatOpenAI:
     raw = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8000/v1").rstrip("/")
     base = raw if raw.endswith("/v1") else f"{raw}/v1"
@@ -61,7 +86,7 @@ def _llm() -> ChatOpenAI:
             "Set OPENAI_MODEL to the model id your server exposes "
             "(from GET {OPENAI_BASE_URL}/models when base ends with /v1)."
         )
-    return ChatOpenAI(
+    return _ChatOpenAIStripToolChoice(
         model=model,
         api_key=key,
         base_url=base,

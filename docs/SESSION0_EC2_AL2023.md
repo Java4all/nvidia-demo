@@ -109,6 +109,11 @@ Or: `bash scripts/setup_ec2_venv.sh` (set `PYTHON=python3.12` if your default `p
 1. [ ] Copy `.env.example` → `.env` with `OPENAI_BASE_URL=http://127.0.0.1:8000/v1` (same host as NIM) and **`OPENAI_MODEL`** from `/v1/models`.
 2. [ ] `source .venv/bin/activate && python scripts/run_session1.py`
 
+If the agent fails with **`"auto" tool choice requires --enable-auto-tool-choice and --tool-call-parser`**, either:
+
+- **Client (default here):** Session 1 uses a small `ChatOpenAI` wrapper that **drops `tool_choice`** from requests so NIM/vLLM accept them. Override with `OPENAI_STRIP_TOOL_CHOICE=0` if you need the parameter sent (e.g. OpenAI cloud), or
+- **Server:** start vLLM/NIM with `--enable-auto-tool-choice` and a matching `--tool-call-parser` for your model family (see your NIM / vLLM image docs).
+
 **Security group:** only open **8000** to your IP if you must hit NIM from outside; for **localhost-only**, default SG is fine.
 
 ---
