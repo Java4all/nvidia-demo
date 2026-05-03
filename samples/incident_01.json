@@ -1,0 +1,18 @@
+{
+  "alert": {
+    "title": "High error rate on checkout-api",
+    "severity": "P2",
+    "source": "Prometheus / Alertmanager",
+    "fired_at": "2026-05-03T14:22:00Z"
+  },
+  "context": {
+    "environment": "prod",
+    "region": "eu-west-1",
+    "service": "checkout-api"
+  },
+  "log_excerpts": [
+    "2026-05-03T14:21:58Z ERROR checkout-api [req-9f3a] payment.ProviderTimeout: upstream=payments-gw latency_ms=30002",
+    "2026-05-03T14:21:59Z WARN  checkout-api [req-9f3a] retry=2/3 backoff_ms=500",
+    "2026-05-03T14:22:00Z ERROR checkout-api [req-b71c] payment.ProviderTimeout: upstream=payments-gw latency_ms=30005"
+  ]
+}

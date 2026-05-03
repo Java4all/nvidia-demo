@@ -1,0 +1,11 @@
+# Session 0 — install PyTorch with CUDA separately (see README).
+# Windows (CUDA): https://pytorch.org/get-started/locally/
+
+pydantic>=2.0,<3
+langchain-core>=0.3
+langchain-openai>=0.2
+langgraph>=0.2
+python-dotenv>=1.0
+
+# Optional: HTTP check for Ollama / NIM OpenAI-compatible endpoints
+httpx>=0.27

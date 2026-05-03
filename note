@@ -1,0 +1,25 @@
+Session 0 (env + Docker + first NIM)
+Venv + PyTorch CUDA + pip install -r requirements-session0.txt + python scripts/check_env.py
+PyTorch Get Started
+Docker Desktop running, GPU available to containers
+Docker Desktop
+NGC account, API key, docker login nvcr.io
+NGC
+First NIM (LLM) container per current docs, cache mount, then GET /v1/models
+NIM for LLMs — Quickstart
+
+
+Extra context: NIM blog
+If NIM won’t run on ~8 GB VRAM, use Ollama for dev; retry NIM on a cloud GPU — same OpenAI-style client.
+Session 7 (NeMo + benchmark + “local vs cloud” decision)
+NeMo — LLM track (not only Speech): start from the hub, then Megatron-Bridge for current LLM/container story
+NeMo documentation hub
+Megatron-Bridge documentation
+“First notebook” habit: open/run the primer from GitHub (clone + Jupyter)
+00_NeMo_Primer.ipynb
+NeMo GitHub
+Local NeMo stop rule: OOM or broken training cell → stop heavy local training; run the same notebook/recipe on a cloud GPU.
+Session 7 deliverable: same 5 golden triage cases vs NIM / Ollama / API + short model_strategy.md (inference path + when to use NeMo in cloud).
+Note: NVIDIA’s “NeMo Framework” user-guide latest entry often emphasizes Speech; for your log copilot / LLM work, use the hub + Megatron-Bridge links above so you don’t spend time in ASR docs by accident.
+
+If you want the README to link to SESSION0_7_CHECKLIST.md, say so and we can add one line.
