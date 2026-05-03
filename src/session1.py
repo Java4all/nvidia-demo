@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, override
 
@@ -62,6 +64,49 @@ def _strip_tool_choice_from_env() -> bool:
     return True
 
 
+def _strip_tool_choice_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    out = dict(kwargs)
+    out.pop("tool_choice", None)
+    eb = out.get("extra_body")
+    if isinstance(eb, Mapping):
+        eb2 = dict(eb)
+        eb2.pop("tool_choice", None)
+        out["extra_body"] = eb2
+    return out
+
+
+_openai_create_patch_lock = threading.Lock()
+_openai_orig_sync_create: Any = None
+_openai_orig_async_create: Any = None
+
+
+def _ensure_openai_completions_strip_tool_choice_patch() -> None:
+    """Patch SDK ``create`` so NIM/vLLM never see ``tool_choice`` (LangChain may bypass LC hooks)."""
+    global _openai_orig_sync_create, _openai_orig_async_create
+    with _openai_create_patch_lock:
+        if _openai_orig_sync_create is not None:
+            return
+        from openai.resources.chat.completions.completions import AsyncCompletions, Completions
+
+        _openai_orig_sync_create = Completions.create
+
+        def _sync_create(self: Any, *args: Any, **kwargs: Any) -> Any:
+            if _strip_tool_choice_from_env():
+                kwargs = _strip_tool_choice_kwargs(kwargs)
+            return _openai_orig_sync_create(self, *args, **kwargs)
+
+        Completions.create = _sync_create  # type: ignore[method-assign]
+
+        _openai_orig_async_create = AsyncCompletions.create
+
+        async def _async_create(self: Any, *args: Any, **kwargs: Any) -> Any:
+            if _strip_tool_choice_from_env():
+                kwargs = _strip_tool_choice_kwargs(kwargs)
+            return await _openai_orig_async_create(self, *args, **kwargs)
+
+        AsyncCompletions.create = _async_create  # type: ignore[method-assign]
+
+
 class _ChatOpenAIStripToolChoice(ChatOpenAI):
     """Drop ``tool_choice`` from chat-completions payloads (NIM / vLLM compatibility)."""
 
@@ -83,6 +128,7 @@ class _ChatOpenAIStripToolChoice(ChatOpenAI):
 
 
 def _llm() -> ChatOpenAI:
+    _ensure_openai_completions_strip_tool_choice_patch()
     raw = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8000/v1").rstrip("/")
     base = raw if raw.endswith("/v1") else f"{raw}/v1"
     key = os.environ.get("OPENAI_API_KEY", "not-used")
