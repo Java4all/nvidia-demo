@@ -173,9 +173,30 @@ def _strip_json_fence(text: str) -> str:
     return text
 
 
+def _extract_first_json_object_str(text: str) -> str:
+    """Parse out the first top-level `{ ... }` value (handles preamble / trailing prose)."""
+    text = _strip_json_fence(text).strip()
+    decoder = json.JSONDecoder()
+    start_search = 0
+    while True:
+        i = text.find("{", start_search)
+        if i == -1:
+            break
+        try:
+            _, end = decoder.raw_decode(text[i:])
+            return text[i : i + end]
+        except json.JSONDecodeError:
+            start_search = i + 1
+            continue
+    raise json.JSONDecodeError("No JSON object found in model output", text, 0)
+
+
 def _parse_triage_json(text: str) -> TriageOutput:
     cleaned = _strip_json_fence(text)
-    data = json.loads(cleaned)
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        data = json.loads(_extract_first_json_object_str(text))
     return TriageOutput.model_validate(data)
 
 
@@ -192,7 +213,13 @@ def _repair_json(llm: ChatOpenAI, bad_text: str, err: str) -> TriageOutput:
     body = _ai_content_str(out)
     if not body.strip():
         raise ValueError("repair pass returned empty content")
-    return _parse_triage_json(body)
+    try:
+        return _parse_triage_json(body)
+    except (json.JSONDecodeError, ValueError) as e2:
+        raise RuntimeError(
+            "JSON repair pass still failed to produce parseable triage JSON. "
+            "Try lowering temperature, retrying, or inspect the model's last reply."
+        ) from e2
 
 
 def _last_non_empty_assistant_text(messages: list[Any]) -> str:
