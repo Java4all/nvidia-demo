@@ -90,9 +90,11 @@ When you have a checkpoint served as **OpenAI-compatible** inference:
 1. Point **`.env`** at that endpoint / **`OPENAI_MODEL`**.
 2. Run **`scripts/benchmark_session7.py`** and compare **`data/session7_nim_report.json`** to a baseline.
 
+If you keep NeMo training in a **separate repo** (for example a sibling **`nvidia-nemo`** checkout), use that repo for checkpoints and Jupyter; use **`nvidia-demo`** only for the agent, **`eval_cases.jsonl`**, and **`benchmark_session7.py`** — see **`nvidia-nemo/README.md`** § “Triage demo and benchmarks” for the same loop in one place.
+
 Training data that resembles incidents should be **redacted** (reuse ideas from **`src/redaction.py`**); do not commit secrets or raw production logs.
 
-Optional local artifacts: use **`training/experiments/`** (see **`training/README.md`**); that directory is gitignored.
+Optional local artifacts in this repo: use **`training/experiments/`** (see **`training/README.md`**); that directory is gitignored.
 
 ---
 

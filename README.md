@@ -310,6 +310,8 @@ After you change the served model (including a **NeMo** checkpoint deployed behi
 
 NeMo is for **building/fine-tuning** models; your agent still calls an **OpenAI-compatible** server—typically **NIM** for GPU inference. See **[docs/model_strategy.md](docs/model_strategy.md)** for how NeMo could fit a **triage fine-tune** pipeline and how to compare checkpoints with the same benchmark.
 
+If you keep training in a separate checkout, use **`nvidia-nemo`** for Jupyter/checkpoints and **`nvidia-demo`** for **`benchmark_session7.py`** (see **`nvidia-nemo/README.md`** → “Triage demo and benchmarks”).
+
 ---
 
 ## Troubleshooting
