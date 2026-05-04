@@ -40,6 +40,30 @@ If you see **`libnvidia-ml.so.1`**: the **host driver** is missing or broken —
 2. [ ] Run your NIM `docker run ...` (cache volume, `-p 8000:8000`, etc.)
 3. [ ] On the instance: `curl -s http://127.0.0.1:8000/v1/models`
 
+**LLM image used in this track (Llama 3.1 8B Instruct NIM):** `nvcr.io/nim/meta/llama-3.1-8b-instruct:2.0.3` — use **`OPENAI_MODEL`** = the `id` returned by `/v1/models` for this container (often `meta/llama-3.1-8b-instruct` or similar). Pair **§ C.1** with `--tool-call-parser llama3_json` for this family.
+
+### C.1 vLLM: `--enable-auto-tool-choice` and `--tool-call-parser` (NIM)
+
+vLLM only accepts OpenAI **`tool_choice: auto`** if the server is started with **both** flags. NIM passes extra vLLM args through **`NIM_PASSTHROUGH_ARGS`** (see [NIM advanced configuration](https://docs.nvidia.com/nim/large-language-models/latest/reference/advanced-configuration.html) and [tool calling](https://docs.nvidia.com/nim/large-language-models/latest/advanced-use-cases/tool-calling-and-mcp.html)).
+
+Add to your **`docker run`** (alongside cache, port, GPU, `NIM_MAX_MODEL_LEN`, etc.):
+
+```bash
+-e NIM_PASSTHROUGH_ARGS="--enable-auto-tool-choice --tool-call-parser llama3_json"
+```
+
+Pick **`--tool-call-parser`** to match the **model family** (must align with vLLM — see [vLLM tool calling](https://docs.vllm.ai/en/latest/features/tool_calling.html)). Examples:
+
+| Model family (typical NIM) | Parser (example) |
+|----------------------------|------------------|
+| Llama 3.1 / 3.3 Instruct | `llama3_json` |
+| Mistral / Mixtral-style | `mistral` |
+| Many “GPT-OSS”–style | `openai` |
+
+If the parser is wrong, you get malformed tool calls or errors — switch parser to match your image’s model card.
+
+**Optional VRAM cap** (same `docker run`): e.g. `-e NIM_MAX_MODEL_LEN=24832` if you saw memory warnings.
+
 ---
 
 ## D. Python 3.12 on Amazon Linux 2023
@@ -111,8 +135,10 @@ Or: `bash scripts/setup_ec2_venv.sh` (set `PYTHON=python3.12` if your default `p
 
 If the agent fails with **`"auto" tool choice requires --enable-auto-tool-choice and --tool-call-parser`**, either:
 
-- **Client (default here):** Session 1 strips `tool_choice` in two places: a `ChatOpenAI` hook on the LangChain payload, and a **one-time patch of the OpenAI Python SDK** (`chat.completions.create` / async `create`) so requests still work if LangChain bypasses that hook. Pull the latest `src/session1.py`. If something sets `OPENAI_STRIP_TOOL_CHOICE=0`, try **`SESSION1_FORCE_STRIP_TOOL_CHOICE=1`**. For OpenAI cloud, set **`OPENAI_STRIP_TOOL_CHOICE=0`** so `tool_choice` is sent. The SDK patch affects **all** chat completion calls in the same Python process after Session 1 builds an LLM.
-- **Server:** start vLLM/NIM with `--enable-auto-tool-choice` and a matching `--tool-call-parser` for your model family (see your NIM / vLLM image docs).
+- **Server (fix at the LLM):** set **`NIM_PASSTHROUGH_ARGS`** as in **§ C.1** and restart the container.
+- **Client (default in this repo):** Session 1 strips `tool_choice` in two places: a `ChatOpenAI` hook on the LangChain payload, and a **one-time patch of the OpenAI Python SDK** (`chat.completions.create` / async `create`) so requests still work if LangChain bypasses that hook. Pull the latest `src/session1.py`. If something sets `OPENAI_STRIP_TOOL_CHOICE=0`, try **`SESSION1_FORCE_STRIP_TOOL_CHOICE=1`**. For OpenAI cloud, set **`OPENAI_STRIP_TOOL_CHOICE=0`** so `tool_choice` is sent. The SDK patch affects **all** chat completion calls in the same Python process after Session 1 builds an LLM.
+
+If you see **400** *`This model only supports single tool-calls at once`*, the OpenAI client was asking for **parallel** tool calls (LangChain’s default). Session 1 sets **`parallel_tool_calls: false`** by default; use **`SESSION1_PARALLEL_TOOL_CALLS=1`** only if you use a server that supports batched tool calls (e.g. OpenAI) and want that behavior.
 
 **Security group:** only open **8000** to your IP if you must hit NIM from outside; for **localhost-only**, default SG is fine.
 

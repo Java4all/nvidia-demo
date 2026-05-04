@@ -53,6 +53,17 @@ def _ai_content_str(msg: AIMessage) -> str:
 _load_dotenv()
 
 
+def _parallel_tool_calls_from_env() -> bool:
+    """NIM/vLLM often allow only one tool call per assistant turn (no parallel batching)."""
+    for key in ("SESSION1_PARALLEL_TOOL_CALLS", "OPENAI_PARALLEL_TOOL_CALLS"):
+        v = os.environ.get(key, "").strip().lower()
+        if v in ("1", "true", "yes", "on"):
+            return True
+        if v in ("0", "false", "no", "off"):
+            return False
+    return False
+
+
 def _strip_tool_choice_from_env() -> bool:
     """vLLM/NIM reject OpenAI-style tool_choice='auto' unless the server enables it."""
     force = os.environ.get("SESSION1_FORCE_STRIP_TOOL_CHOICE", "").strip().lower()
@@ -138,12 +149,16 @@ def _llm() -> ChatOpenAI:
             "Set OPENAI_MODEL to the model id your server exposes "
             "(from GET {OPENAI_BASE_URL}/models when base ends with /v1)."
         )
+    # OpenAI defaults parallel_tool_calls=True; many NIM backends error with
+    # "only supports single tool-calls at once" — default off, opt in via env.
+    model_kwargs: dict[str, Any] = {"parallel_tool_calls": _parallel_tool_calls_from_env()}
     llm = _ChatOpenAIStripToolChoice(
         model=model,
         api_key=key,
         base_url=base,
         temperature=0,
         timeout=300,
+        model_kwargs=model_kwargs,
     )
     if _strip_tool_choice_from_env() and llm.model_kwargs:
         llm.model_kwargs.pop("tool_choice", None)
