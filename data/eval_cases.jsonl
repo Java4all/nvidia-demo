@@ -1,0 +1,3 @@
+{"id": "checkout_golden", "incident_path": "samples/incident_01.json", "expect": {"summary_contains": ["checkout"], "min_next_steps": 1, "min_likely_causes": 1}}
+{"id": "schema_smoke", "incident_path": "samples/incident_01.json", "expect": {}}
+{"id": "minimal_inline", "incident": {"alert": {"title": "svc errors", "severity": "P3", "source": "eval", "fired_at": "2026-01-01T12:00:00Z"}, "context": {"environment": "dev", "region": "us-east-1", "service": "api"}, "log_excerpts": ["2026-01-01T12:00:01Z ERROR api request failed code=500"]}, "expect": {}}

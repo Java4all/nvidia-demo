@@ -9,7 +9,7 @@ Work through these in order in **`nvidia-demo`**. Session **0** must be green be
 | **2** | Prompts, redaction, JSON repair pass | `src/prompts/session2_system.txt`, `src/redaction.py`, `src/json_repair.py`, `scripts/run_session2.py` |
 | **3** | **RAG** over runbooks (`data/docs`) | `data/docs/`, `src/rag_runbooks.py`, `src/tools_rag.py`, `src/prompts/session3_system.txt`, `scripts/run_session3.py` |
 | **4** | CLI: `--alert` / `--logs` → `--out` JSON | `src/cli_incident.py`, `scripts/run_session4.py` |
-| **5** | **eval** harness (`eval_cases.jsonl`) | |
+| **5** | **eval** harness (`eval_cases.jsonl`) | `data/eval_cases.jsonl`, `src/eval_harness.py`, `src/triage_profile.py`, `scripts/run_eval.py` |
 | **6** | Optional multi-agent | |
 | **7** | Benchmark Ollama vs NIM vs API; **NeMo** strategy (local smoke vs cloud train) | `docs/model_strategy.md` |
 

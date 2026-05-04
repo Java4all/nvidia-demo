@@ -224,6 +224,28 @@ Get-Content samples\sample_logs.txt | python scripts\run_session4.py --alert "Te
 
 ---
 
+## Session 5 — eval harness (`eval_cases.jsonl`)
+
+**Goal:** run many incidents + optional **expect** rules; report pass/fail (default profile: Session **3**).
+
+### Run
+
+```powershell
+python scripts\run_eval.py --cases data\eval_cases.jsonl
+python scripts\run_eval.py --cases data\eval_cases.jsonl --out eval_report.json --session 3
+```
+
+Each **JSONL** line is one JSON object: `id`, `incident` or `incident_path`, optional `expect`, optional `skip`. Expect rules are documented in **`src/eval_harness.py`** (`check_expectations`).
+
+### Code layout
+
+- `data/eval_cases.jsonl` — sample cases  
+- `src/eval_harness.py` — load cases, resolve incidents, check expectations  
+- `src/triage_profile.py` — `run_triage_for_session` (shared with Session 4 CLI)  
+- `scripts/run_eval.py` — batch runner and JSON report  
+
+---
+
 ## Troubleshooting
 
 | Issue | What to try |

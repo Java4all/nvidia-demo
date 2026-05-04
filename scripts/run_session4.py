@@ -123,9 +123,7 @@ def main() -> int:
     log_blob = _read_logs(args.logs)
 
     from src.cli_incident import build_incident
-    from src.session1 import run_triage
-    from src.tools_log import TOOLS as TOOLS_S1
-    from src.tools_rag import TOOLS_SESSION3
+    from src.triage_profile import run_triage_for_session
 
     incident = build_incident(
         alert_title,
@@ -138,17 +136,7 @@ def main() -> int:
         service=args.service,
     )
 
-    if args.session == 1:
-        triage, trace = run_triage(incident, prompt_file="session1_system.txt", redact=False, tools=TOOLS_S1)
-    elif args.session == 2:
-        triage, trace = run_triage(incident, prompt_file="session2_system.txt", redact=True, tools=TOOLS_S1)
-    else:
-        triage, trace = run_triage(
-            incident,
-            prompt_file="session3_system.txt",
-            redact=True,
-            tools=TOOLS_SESSION3,
-        )
+    triage, trace = run_triage_for_session(incident, session=args.session)
 
     Path(args.out).write_text(triage.model_dump_json(indent=2), encoding="utf-8")
     if args.trace:
