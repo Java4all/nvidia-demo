@@ -1,0 +1,18 @@
+{
+  "alert": {
+    "title": "queue consumer lag for billing-jobs",
+    "severity": "P2",
+    "source": "Kafka lag exporter",
+    "fired_at": "2026-05-13T03:20:00Z"
+  },
+  "context": {
+    "environment": "prod",
+    "region": "us-west-2",
+    "service": "billing-worker"
+  },
+  "log_excerpts": [
+    "2026-05-13T03:19:55Z ERROR billing-worker [partition=5] offset_lag=125000 high_water=9000000",
+    "2026-05-13T03:19:56Z WARN  billing-worker consumer.poll timeout_ms=5000 batch_size=0",
+    "2026-05-13T03:19:57Z ERROR billing-worker sink=database upsert failed retry=3/3"
+  ]
+}

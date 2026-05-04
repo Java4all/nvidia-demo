@@ -1,0 +1,18 @@
+{
+  "alert": {
+    "title": "Spike in 401 on auth-api",
+    "severity": "P3",
+    "source": "API gateway metrics",
+    "fired_at": "2026-05-11T19:40:00Z"
+  },
+  "context": {
+    "environment": "prod",
+    "region": "eu-central-1",
+    "service": "auth-api"
+  },
+  "log_excerpts": [
+    "2026-05-11T19:39:58Z WARN  auth-api [cid=x1] jwt.verify failed: token_expired",
+    "2026-05-11T19:39:59Z ERROR auth-api [cid=x2] oauth.introspect 401 upstream=idsrv latency_ms=120",
+    "2026-05-11T19:40:00Z ERROR auth-api [cid=x3] rate_limit burst client_id=mobile-app"
+  ]
+}

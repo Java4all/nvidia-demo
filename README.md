@@ -110,7 +110,11 @@ nvidia-demo/
   scripts/check_env.py
   scripts/run_session1.py
   src/
-  samples/incident_01.json
+  samples/incident_01.json … incident_05.json   # golden eval set
+  data/eval_cases.jsonl
+  docs/eval_golden_workflow.md
+  docs/NeMo_learning_lab.md
+  training/README.md
   .env.example
 ```
 
@@ -235,7 +239,7 @@ python scripts\run_eval.py --cases data\eval_cases.jsonl
 python scripts\run_eval.py --cases data\eval_cases.jsonl --out eval_report.json --session 3
 ```
 
-Each **JSONL** line is one JSON object: `id`, `incident` or `incident_path`, optional `expect`, optional `skip`. Expect rules are documented in **`src/eval_harness.py`** (`check_expectations`).
+Each **JSONL** line is one JSON object: `id`, `incident` or `incident_path`, optional `expect`, optional `skip`. Expect rules are documented in **`src/eval_harness.py`** (`check_expectations`). **Golden set:** five incidents in **`samples/incident_01.json`** … **`incident_05.json`**; workflow for edits and post-NIM benchmarks: **[docs/eval_golden_workflow.md](docs/eval_golden_workflow.md)**.
 
 ### Code layout
 
@@ -284,6 +288,27 @@ Without `RUN_LIVE_LLM`, that file’s tests are **skipped** so normal `pytest te
 - `src/prompts/session6_research.txt` — phase 1 system prompt  
 - `src/prompts/session6_synthesis.txt` — phase 2 schema instructions  
 - `src/session6.py` — `run_multi_agent_triage`, `triage_session6_from_incident_path`  
+
+---
+
+## Session 7 — NIM benchmark + NeMo strategy
+
+**Goal:** record **NIM** runs (same `.env` as `run_session3.py`)—**latency**, **schema valid** (a `TriageOutput` was produced), and **eval expectations** from `data/eval_cases.jsonl`. Strategy write-up: **[docs/model_strategy.md](docs/model_strategy.md)** (NIM *inference* vs **NeMo** *training*).
+
+### NIM benchmark
+
+```powershell
+python scripts\benchmark_session7.py
+python scripts\benchmark_session7.py --cases data\eval_cases.jsonl --out data\session7_nim_report.json --session 3
+```
+
+Writes a JSON report (default `data/session7_nim_report.json`) with per-case `duration_ms`, `schema_valid`, `expect_ok`, and aggregate **mean / min / max / p50 / p95** latency. Exit code **1** only if a case throws (API/inference error), not if expectations fail.
+
+After you change the served model (including a **NeMo** checkpoint deployed behind NIM), re-run the benchmark and compare reports; see **[docs/eval_golden_workflow.md](docs/eval_golden_workflow.md)**.
+
+### NeMo (training) vs this app
+
+NeMo is for **building/fine-tuning** models; your agent still calls an **OpenAI-compatible** server—typically **NIM** for GPU inference. See **[docs/model_strategy.md](docs/model_strategy.md)** for how NeMo could fit a **triage fine-tune** pipeline and how to compare checkpoints with the same benchmark.
 
 ---
 

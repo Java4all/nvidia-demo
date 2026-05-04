@@ -45,3 +45,10 @@ def test_load_eval_cases_skips_comments(tmp_path: Path) -> None:
     cases = load_eval_cases(p)
     assert len(cases) == 1
     assert cases[0]["id"] == "a"
+
+
+def test_repo_eval_cases_five_golden() -> None:
+    root = Path(__file__).resolve().parents[1]
+    cases = load_eval_cases(root / "data" / "eval_cases.jsonl")
+    assert len(cases) == 5
+    assert cases[0]["id"] == "golden_01_checkout_payments"

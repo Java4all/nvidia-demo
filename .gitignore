@@ -18,3 +18,4 @@ out/
 *.local.md
 session1_parse_failure.txt
 triage_parse_failure.txt
+data/session7_nim_report.json

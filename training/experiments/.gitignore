@@ -1,0 +1,3 @@
+# Local NeMo runs, checkpoints, datasets — do not commit
+*
+!.gitignore

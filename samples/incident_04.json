@@ -1,0 +1,18 @@
+{
+  "alert": {
+    "title": "search-api p99 latency SLO breach",
+    "severity": "P2",
+    "source": "SRE SLO / Prometheus",
+    "fired_at": "2026-05-12T11:05:00Z"
+  },
+  "context": {
+    "environment": "prod",
+    "region": "ap-southeast-1",
+    "service": "search-api"
+  },
+  "log_excerpts": [
+    "2026-05-12T11:04:50Z WARN  search-api [req-s1] cache.redis miss key=idx:region:ap-s1 count=4",
+    "2026-05-12T11:04:51Z ERROR search-api [req-s1] opensearch query took_ms=4200 budget_ms=2000",
+    "2026-05-12T11:04:52Z ERROR search-api [req-s2] opensearch 503 node=es-data-2"
+  ]
+}

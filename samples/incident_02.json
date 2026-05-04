@@ -1,0 +1,18 @@
+{
+  "alert": {
+    "title": "orders-db replica lag above SLO",
+    "severity": "P2",
+    "source": "Datadog / database monitors",
+    "fired_at": "2026-05-10T08:15:00Z"
+  },
+  "context": {
+    "environment": "prod",
+    "region": "us-east-1",
+    "service": "orders-service"
+  },
+  "log_excerpts": [
+    "2026-05-10T08:14:55Z ERROR orders-service [trace=abc1] db.QueryTimeout: replica=orders-db-r2 wait_ms=18500",
+    "2026-05-10T08:14:56Z WARN  orders-service [trace=abc1] circuit=cart_write state=HALF_OPEN",
+    "2026-05-10T08:14:57Z ERROR orders-service [trace=def2] db.ConnectionPoolExhausted active=50 max=50"
+  ]
+}
