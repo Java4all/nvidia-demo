@@ -149,9 +149,30 @@ Then `OPENAI_BASE_URL=http://127.0.0.1:8000/v1` on your PC.
 
 - `src/schema.py` — `TriageOutput` contract  
 - `src/tools_log.py` — `extract_timestamps_and_ids`, `classify_severity_keywords`, `stub_lookup_playbook`  
-- `src/session1.py` — `create_react_agent` + JSON parse + one **repair** LLM pass if JSON is invalid  
+- `src/session1.py` — `create_react_agent` + JSON parse / repair via `src/json_repair.py`  
 
 Full roadmap: **[docs/SESSIONS_OVERVIEW.md](docs/SESSIONS_OVERVIEW.md)**.
+
+---
+
+## Session 2 — redaction, prompts, repair (same agent)
+
+**Goal:** pre-redact incident text before the LLM, use a **Session 2** system prompt (placeholder-aware + strict JSON), and keep the shared **JSON repair** path in `src/json_repair.py`.
+
+### Run
+
+```powershell
+python scripts\run_session2.py
+python scripts\run_session2.py --incident samples\incident_01.json --trace out\session2_trace.json
+```
+
+### Code layout
+
+- `src/redaction.py` — `redact_incident()` for emails, JWT-like strings, AWS-style keys, `sk-…` keys, long hex, bearer/basic  
+- `src/prompts/session2_system.txt` — system prompt for redacted inputs  
+- `src/json_repair.py` — fence strip, first-`{` extract, trailing-comma relax, `repair_triage_json()`  
+
+Session 1 still defaults to `session1_system.txt` and **no** redaction; Session 2 calls `run_triage(..., prompt_file="session2_system.txt", redact=True)`.
 
 ---
 
