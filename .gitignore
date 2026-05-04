@@ -16,3 +16,4 @@ build/
 vector_store/
 out/
 *.local.md
+session1_parse_failure.txt

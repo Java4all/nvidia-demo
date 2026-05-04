@@ -191,38 +191,106 @@ def _extract_first_json_object_str(text: str) -> str:
     raise json.JSONDecodeError("No JSON object found in model output", text, 0)
 
 
+def _relax_json_commas(s: str) -> str:
+    """Strip trailing commas before } or ] (common invalid JSON from LLMs)."""
+    prev = None
+    while prev != s:
+        prev = s
+        s = re.sub(r",(\s*)([}\]])", r"\1\2", s)
+    return s
+
+
 def _parse_triage_json(text: str) -> TriageOutput:
     cleaned = _strip_json_fence(text)
+    blobs: list[str] = [cleaned, _relax_json_commas(cleaned)]
     try:
-        data = json.loads(cleaned)
+        ext = _extract_first_json_object_str(text)
+        blobs.extend([ext, _relax_json_commas(ext)])
     except json.JSONDecodeError:
-        data = json.loads(_extract_first_json_object_str(text))
-    return TriageOutput.model_validate(data)
+        pass
+
+    seen: set[str] = set()
+    last_err: BaseException | None = None
+    for raw in blobs:
+        if raw in seen:
+            continue
+        seen.add(raw)
+        try:
+            data = json.loads(raw)
+            return TriageOutput.model_validate(data)
+        except (json.JSONDecodeError, ValueError) as e:
+            last_err = e
+            continue
+    if last_err is not None:
+        raise last_err
+    raise json.JSONDecodeError("Could not parse triage JSON", cleaned, 0)
 
 
 def _repair_json(llm: ChatOpenAI, bad_text: str, err: str) -> TriageOutput:
-    msg = (
-        "The following text was not valid JSON for the triage schema.\n"
-        f"Parse error: {err}\n\n"
-        "Return ONLY a corrected JSON object, no fences, no commentary:\n\n"
-        + bad_text[:12000]
+    schema_hint = (
+        '{"summary":"...","signals":{"errors":[],"warnings":[],"notable_ids":[]},'
+        '"likely_causes":[{"cause":"...","confidence":"low|med|high","evidence":"..."}],'
+        '"next_steps":[],"escalate":{"required":false,"reason":"..."},"references":[]}'
     )
-    out = llm.invoke([HumanMessage(content=msg)])
-    if not isinstance(out, AIMessage):
-        raise ValueError("repair pass returned no AIMessage")
-    body = _ai_content_str(out)
-    if not body.strip():
-        raise ValueError("repair pass returned empty content")
+    attempts = (
+        (
+            "The following text was not valid JSON for the triage schema.\n"
+            f"Parse error: {err}\n\n"
+            "Return ONLY a corrected JSON object, no markdown fences, no commentary:\n\n"
+            + bad_text[:12000]
+        ),
+        (
+            "Return ONLY one JSON object (no markdown, no text before or after). "
+            "Keys: summary, signals, likely_causes, next_steps, escalate, references. "
+            f"Shape example (structure only): {schema_hint}\n\nFix or rebuild from:\n\n"
+            + bad_text[:12000]
+        ),
+    )
+    last_inner: BaseException | None = None
+    for msg in attempts:
+        out = llm.invoke([HumanMessage(content=msg)])
+        if not isinstance(out, AIMessage):
+            raise ValueError("repair pass returned no AIMessage")
+        body = _ai_content_str(out)
+        if not body.strip():
+            continue
+        try:
+            return _parse_triage_json(body)
+        except (json.JSONDecodeError, ValueError) as e2:
+            last_inner = e2
+            continue
+    fail_path = _repo_root() / "session1_parse_failure.txt"
     try:
-        return _parse_triage_json(body)
-    except (json.JSONDecodeError, ValueError) as e2:
-        raise RuntimeError(
-            "JSON repair pass still failed to produce parseable triage JSON. "
-            "Try lowering temperature, retrying, or inspect the model's last reply."
-        ) from e2
+        fail_path.write_text(
+            f"# Last error: {err}\n# Repair errors: {last_inner!r}\n\n--- assistant text ---\n{bad_text[:50000]}",
+            encoding="utf-8",
+        )
+    except OSError:
+        fail_path = Path("(could not write)")
+    raise RuntimeError(
+        "JSON repair pass still failed to produce parseable triage JSON. "
+        f"Wrote raw assistant text to {fail_path}. "
+        "Retry the run; if it persists, inspect that file (often the model returned "
+        "non-JSON or the wrong assistant turn was parsed)."
+    ) from last_inner
 
 
-def _last_non_empty_assistant_text(messages: list[Any]) -> str:
+def _final_triage_assistant_text(messages: list[Any]) -> str:
+    """
+    Use the chronologically **last** assistant message when possible.
+
+    Scanning only for the last non-empty text can pick an earlier turn like
+    'I'll use the tool…' instead of the final triage JSON.
+    """
+    last_ai: AIMessage | None = None
+    for m in messages:
+        if isinstance(m, AIMessage):
+            last_ai = m
+    if last_ai is None:
+        raise RuntimeError("Agent returned no AIMessage")
+    body = _ai_content_str(last_ai).strip()
+    if body:
+        return _ai_content_str(last_ai)
     for m in reversed(messages):
         if isinstance(m, AIMessage):
             t = _ai_content_str(m).strip()
@@ -244,7 +312,7 @@ def run_triage(incident: dict[str, Any]) -> tuple[TriageOutput, list[dict[str, A
     )
 
     messages = list(state.get("messages", []))
-    last_ai = _last_non_empty_assistant_text(messages)
+    last_ai = _final_triage_assistant_text(messages)
 
     trace: list[dict[str, Any]] = []
     for m in messages:
