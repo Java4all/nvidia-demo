@@ -1,0 +1,3 @@
+2026-05-03T14:21:58Z ERROR checkout-api [req-9f3a] payment.ProviderTimeout: upstream=payments-gw latency_ms=30002
+2026-05-03T14:21:59Z WARN  checkout-api [req-9f3a] retry=2/3 backoff_ms=500
+2026-05-03T14:22:00Z ERROR checkout-api [req-b71c] payment.ProviderTimeout: upstream=payments-gw latency_ms=30005

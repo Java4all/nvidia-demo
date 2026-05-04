@@ -198,6 +198,32 @@ Add or edit files under **`data/docs/`** (e.g. `payments_dependency.md`). The ag
 
 ---
 
+## Session 4 — CLI (`--alert` / `--logs` → `--out`)
+
+**Goal:** build an incident from the shell, run triage (default **Session 3**: RAG + redaction), write **`TriageOutput`** JSON to **`--out`**.
+
+### Examples
+
+```powershell
+python scripts\run_session4.py --alert "High error rate on checkout-api" `
+  --logs samples\sample_logs.txt --out triage.json
+
+python scripts\run_session4.py --alert-file my_alert.txt --logs samples\sample_logs.txt `
+  --out triage.json --service checkout-api --region eu-west-1 --env prod --trace trace.json
+
+# stdin logs (PowerShell)
+Get-Content samples\sample_logs.txt | python scripts\run_session4.py --alert "Test" --logs - --out out.json
+```
+
+- **`--session {1,2,3}`** — tool/prompt profile (default **3**). Session **2** adds redaction prompt without RAG; Session **1** is baseline tools only.
+
+### Code layout
+
+- `src/cli_incident.py` — `build_incident(alert_title, log_text, …)`  
+- `scripts/run_session4.py` — argparse entrypoint  
+
+---
+
 ## Troubleshooting
 
 | Issue | What to try |
