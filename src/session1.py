@@ -175,15 +175,19 @@ def run_triage(
     *,
     prompt_file: str = "session1_system.txt",
     redact: bool = False,
+    tools: list | None = None,
 ) -> tuple[TriageOutput, list[dict[str, Any]]]:
     """
     Run the log triage agent. Session 2 uses ``prompt_file=session2_system.txt`` and
-    ``redact=True`` (see ``scripts/run_session2.py``).
+    ``redact=True`` (see ``scripts/run_session2.py``). Session 3 passes
+    ``tools=TOOLS_SESSION3`` and ``prompt_file=session3_system.txt`` (see
+    ``scripts/run_session3.py``).
     """
     payload = redact_incident(incident) if redact else incident
 
     llm = _llm()
-    graph = create_react_agent(llm, TOOLS, prompt=_system_prompt(prompt_file))
+    tool_list = tools if tools is not None else TOOLS
+    graph = create_react_agent(llm, tool_list, prompt=_system_prompt(prompt_file))
 
     user = json.dumps(payload, indent=2)
     state = graph.invoke(
@@ -216,7 +220,8 @@ def triage_from_incident_path(
     *,
     prompt_file: str = "session1_system.txt",
     redact: bool = False,
+    tools: list | None = None,
 ) -> tuple[TriageOutput, list[dict[str, Any]]]:
     with open(path, encoding="utf-8") as f:
         incident = json.load(f)
-    return run_triage(incident, prompt_file=prompt_file, redact=redact)
+    return run_triage(incident, prompt_file=prompt_file, redact=redact, tools=tools)

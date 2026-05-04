@@ -176,6 +176,28 @@ Session 1 still defaults to `session1_system.txt` and **no** redaction; Session 
 
 ---
 
+## Session 3 — RAG over runbooks (`data/docs`)
+
+**Goal:** retrieve markdown runbook chunks for the alert and logs, then triage with the same `TriageOutput` JSON. Retrieval is **lexical** (chunk + term overlap) so it runs on an inference-only node without a separate embedding service.
+
+### Run
+
+```powershell
+python scripts\run_session3.py
+python scripts\run_session3.py --incident samples\incident_01.json --trace out\session3_trace.json
+```
+
+Add or edit files under **`data/docs/`** (e.g. `payments_dependency.md`). The agent tool **`lookup_runbook_rag`** searches these at runtime.
+
+### Code layout
+
+- `data/docs/*.md` — runbook source  
+- `src/rag_runbooks.py` — `RunbookIndex` (chunk + score)  
+- `src/tools_rag.py` — `TOOLS_SESSION3` (RAG tool + same log tools as before; **no** `stub_lookup_playbook`)  
+- `src/prompts/session3_system.txt` — instructs use of RAG and runbook citations in `references`  
+
+---
+
 ## Troubleshooting
 
 | Issue | What to try |

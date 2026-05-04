@@ -28,7 +28,7 @@ def classify_severity_keywords(log_text: str) -> str:
 
 @tool
 def stub_lookup_playbook(alert_title: str) -> str:
-    """Stub runbook lookup — replace with RAG in Session 3."""
+    """Stub runbook lookup — Session 1–2; Session 3 uses ``lookup_runbook_rag`` in ``tools_rag``."""
     title = (alert_title or "").lower()
     if "checkout" in title or "payment" in title:
         return (
