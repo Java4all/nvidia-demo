@@ -40,6 +40,28 @@ If you see **`libnvidia-ml.so.1`**: the **host driver** is missing or broken —
 2. [ ] Run your NIM `docker run ...` (cache volume, `-p 8000:8000`, etc.)
 3. [ ] On the instance: `curl -s http://127.0.0.1:8000/v1/models`
 
+### C.0 Which port is NIM on? (e.g. g6.xlarge)
+
+**Default in NVIDIA quickstarts:** map **host `8000` → container `8000`** (`-p 8000:8000`). Your **OpenAI base URL** is then `http://127.0.0.1:8000/v1` when running Python **on the same EC2 host**.
+
+**If you are not sure what you used:**
+
+```bash
+# Running container and published ports (look at PORTS, e.g. 0.0.0.0:8000->8000/tcp)
+docker ps
+
+# List listening TCP ports (find 8000 or another port bound by docker-proxy)
+sudo ss -tlnp
+```
+
+Then test the API (replace `8000` if your `docker ps` shows another host port):
+
+```bash
+curl -s http://127.0.0.1:8000/v1/models
+```
+
+**From your laptop** (NIM only on the instance): either open the EC2 **security group** for that **TCP port** to your IP, or use an **SSH tunnel** and keep using `127.0.0.1` in `.env` on the laptop (see **README** SSH example: `-L 8000:127.0.0.1:8000`).
+
 **LLM image used in this track (Llama 3.1 8B Instruct NIM):** `nvcr.io/nim/meta/llama-3.1-8b-instruct:2.0.3` — use **`OPENAI_MODEL`** = the `id` returned by `/v1/models` for this container (often `meta/llama-3.1-8b-instruct` or similar). Pair **§ C.1** with `--tool-call-parser llama3_json` for this family.
 
 ### C.1 vLLM: `--enable-auto-tool-choice` and `--tool-call-parser` (NIM)
@@ -141,6 +163,14 @@ If the agent fails with **`"auto" tool choice requires --enable-auto-tool-choice
 If you see **400** *`This model only supports single tool-calls at once`*, the OpenAI client was asking for **parallel** tool calls (LangChain’s default). Session 1 sets **`parallel_tool_calls: false`** by default; use **`SESSION1_PARALLEL_TOOL_CALLS=1`** only if you use a server that supports batched tool calls (e.g. OpenAI) and want that behavior.
 
 **Security group:** only open **8000** to your IP if you must hit NIM from outside; for **localhost-only**, default SG is fine.
+
+---
+
+## G. Add NeMo (training) on the same instance (optional)
+
+Keep **`nvidia-demo`** for inference + benchmarks. Use a separate clone **`nvidia-nemo`** for **NeMo in Docker** (Jupyter on **8888**; NIM stays on **8000**). On a **single-GPU** instance, **stop NIM** while running heavy NeMo training, then start NIM again.
+
+See **`nvidia-nemo/docs/EC2_WITH_NIM.md`** in your **`nvidia-nemo`** clone (NeMo Jupyter **8888**, NIM **8000**, GPU sharing notes).
 
 ---
 

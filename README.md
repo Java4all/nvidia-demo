@@ -2,6 +2,8 @@
 
 This repo follows a **session-based plan**: orchestration + RAG + optional **NVIDIA NeMo** / **NIM**.
 
+**Team demo (NIM + NeMo phases):** if you use the companion **`nvidia-nemo`** repo, see **`nvidia-nemo/docs/TEAM_DEMO_NIM_AND_NEMO.md`** (pointer: **[docs/TEAM_DEMO_NIM_AND_NEMO.md](docs/TEAM_DEMO_NIM_AND_NEMO.md)**).
+
 ---
 
 ## Python version

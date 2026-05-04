@@ -13,4 +13,6 @@ Work through these in order in **`nvidia-demo`**. Session **0** must be green be
 | **6** | Optional multi-agent | `src/prompts/session6_*.txt`, `src/session6.py`, `scripts/run_session6.py` |
 | **7** | NIM benchmark (latency, schema, eval); **NeMo** learning + `docs/model_strategy.md` | `scripts/benchmark_session7.py`, `docs/model_strategy.md`, `docs/NeMo_learning_lab.md`, `training/` |
 
+**Team demo (NIM + NeMo phases, shareable):** `nvidia-nemo/docs/TEAM_DEMO_NIM_AND_NEMO.md` (companion repo).
+
 Ask to implement **Session N** in chat when you are ready; we keep changes scoped to that session.
