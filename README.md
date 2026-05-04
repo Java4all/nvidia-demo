@@ -259,6 +259,26 @@ python scripts\run_session6.py --incident samples\incident_01.json --trace sessi
 
 Uses **`get_llm()`** from Session 1, redacts incidents like Session 2/3, and reuses **`parse_triage_json` / `repair_triage_json`** on the synthesis reply.
 
+### Live LLM tests (optional)
+
+From repo root, with **`.env`** pointing at your NIM (same as `run_session6.py`):
+
+**PowerShell**
+
+```powershell
+$env:RUN_LIVE_LLM = "1"
+python -m pytest tests/test_session6_live.py -v
+```
+
+**bash**
+
+```bash
+export RUN_LIVE_LLM=1
+python -m pytest tests/test_session6_live.py -v
+```
+
+Without `RUN_LIVE_LLM`, that file’s tests are **skipped** so normal `pytest tests/` stays offline and fast. Expect **minutes** per test (two LLM phases + tools).
+
 ### Code layout
 
 - `src/prompts/session6_research.txt` — phase 1 system prompt  
