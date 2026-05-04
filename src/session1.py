@@ -146,6 +146,11 @@ def _llm() -> ChatOpenAI:
     return llm
 
 
+def get_llm() -> ChatOpenAI:
+    """Shared ChatOpenAI client for Session 6 synthesis and other callers."""
+    return _llm()
+
+
 def _final_triage_assistant_text(messages: list[Any]) -> str:
     """
     Prefer the chronologically last assistant message with content.

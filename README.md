@@ -246,6 +246,27 @@ Each **JSONL** line is one JSON object: `id`, `incident` or `incident_path`, opt
 
 ---
 
+## Session 6 — optional multi-agent (research + synthesis)
+
+**Goal:** split work into two LLM phases—**(1)** ReAct + Session 3 tools/RAG with a **research summary**, **(2)** a separate **synthesis** call that outputs only **`TriageOutput`** JSON (no tools).
+
+### Run
+
+```powershell
+python scripts\run_session6.py
+python scripts\run_session6.py --incident samples\incident_01.json --trace session6_trace.json
+```
+
+Uses **`get_llm()`** from Session 1, redacts incidents like Session 2/3, and reuses **`parse_triage_json` / `repair_triage_json`** on the synthesis reply.
+
+### Code layout
+
+- `src/prompts/session6_research.txt` — phase 1 system prompt  
+- `src/prompts/session6_synthesis.txt` — phase 2 schema instructions  
+- `src/session6.py` — `run_multi_agent_triage`, `triage_session6_from_incident_path`  
+
+---
+
 ## Troubleshooting
 
 | Issue | What to try |
